@@ -1,8 +1,9 @@
-# car-center-devlab 프로젝트 논리명 추출 규칙
+# Logical Name Extraction Rules for Objects(Classe, Method, Fields, MyBatisMapper, SqlStatement)
 
 ## 1. Class(클래스)의 logical name(논리명) 추출 규칙
 - **논리명(logical name) 위치**: Class 선언 위치의 상단에 코멘트로 기술되어 있음. '/**\n * {local_name}\n */'의 형태로 기술되어 있음.
 - **논리명 저장**: DB(neo4j)의 **Class 노드의 'logical_name' 속성에 저장**한다
+- 논리명(local_name) 추출에 실패한 경우는 빈문자열("")을 리턴한다
 - 예시 코드: 예시코드의 UserController클래스의 logical name(논리명)은 **'사용자 관리 컨트롤러'** 임
 ```java
     /**
@@ -18,6 +19,7 @@
 ## 2. Method(메서드)의 논리명 추출 규칙
 - **논리명(logical name) 위치**: Method 선언 위치의 상단에 코멘트로 기술되어 있음. '/**\n * {local name}\n */'의 형태로 기술되어 있음
 - **논리명 저장**: DB(neo4j)의 **Method 노드의 'logical_name' 속성에 저장**한다
+- 논리명(local_name) 추출에 실패한 경우는 빈문자열("")을 리턴한다
 - 예시 코드: 예시코드의 changePassword() Method의의 logical name(논리명)은 **'비밀번호 변경'** 임
 ```java
     /**
@@ -42,9 +44,11 @@
     }
 ```
 
+
 ## 3. MyBatis Mapper XML의 논리명 추출 규칙
 - **논리명(logical name) 위치**: `<mapper>` 태그의 `namespace` 속성 위의 주석
 - **논리명 저장**: DB(neo4j)의 **MyBatisMapper 노드의 'logical_name' 속성에 저장**한다
+- 논리명(local_name) 추출에 실패한 경우는 빈문자열("")을 리턴한다
 - **형식**: `<!-- {logical_name} -->`
 - 예시 코드: 예시코드의 UserMapper의 logical name(논리명)은 **'사용자 데이터 매퍼'** 임
 ```xml
@@ -60,6 +64,7 @@
 ## 4. SQL 문의 논리명 추출 규칙
 - **논리명(logical name) 위치**: 각 SQL 태그(`<select>`, `<insert>`, `<update>`, `<delete>`) 위의 주석
 - **논리명 저장**: DB(neo4j)의 **SqlStatement 노드의 'logical_name' 속성에 저장**한다
+- 논리명(local_name) 추출에 실패한 경우는 빈문자열("")을 리턴한다
 - **형식**: `<!-- {logical_name} -->`
 - 예시 코드: 예시코드의 findUserById SQL의 logical name(논리명)은 **'사용자 ID로 조회'** 임
 ```xml
@@ -73,4 +78,17 @@
         FROM users 
         WHERE user_id = #{userId}
     </select>
+```
+
+## 5. Field(변수) 논리명 추출 규칙
+- **논리명(logical name) 위치**: 전역 변수(Field) 선언 위치의 상단에 코멘트로 기술되어 있음. '/**\n * {local name}\n */'의 형태로 기술되어 있음
+- **논리명 저장**: DB(neo4j)의 **Field 노드의 'logical_name' 속성에 저장**한다
+- 논리명(local_name) 추출에 실패한 경우는 빈문자열("")을 리턴한다
+- 예시 코드: 예시코드의 userService 변수의 logical name(논리명)은 **'사용자 관리 서비스 클래스 변수'** 임
+```java
+    /**
+	 * 사용자 관리 서비스 클래스 변수
+	 */
+	@Autowired
+    private final UserService userService;
 ```

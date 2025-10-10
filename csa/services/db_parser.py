@@ -13,7 +13,7 @@ class DBParser:
     def __init__(self):
         self.logger = get_logger(__name__)
 
-    def parse_ddl_file(self, file_path: str, project_name: str) -> List[Dict[str, Any]]:
+    def parse_ddl_file(self, file_path: str, project_name: str) -> Dict[str, Any]:
         """
         Parse a DDL file and return database objects.
         
@@ -22,7 +22,7 @@ class DBParser:
             project_name: Name of the project
             
         Returns:
-            List of database objects to be added to the graph
+            Dictionary containing database objects to be added to the graph
         """
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -34,12 +34,17 @@ class DBParser:
             
             # Parse tables
             tables = self._parse_tables(content)
+            self.logger.debug(f"Parsed {len(tables)} tables from {file_path}")
             
             # Parse indexes
             indexes = self._parse_indexes(content)
+            total_indexes = sum(len(table_indexes) for table_indexes in indexes.values())
+            self.logger.debug(f"Parsed {total_indexes} indexes from {file_path}")
             
             # Parse constraints
             constraints = self._parse_constraints(content)
+            total_constraints = sum(len(table_constraints) for table_constraints in constraints.values())
+            self.logger.debug(f"Parsed {total_constraints} constraints from {file_path}")
             
             # Create database object
             database = Database(
@@ -55,7 +60,9 @@ class DBParser:
             table_objects = []
             column_objects = []
             
+            self.logger.debug(f"Creating objects for {len(tables)} tables...")
             for table_name, table_info in tables.items():
+                self.logger.debug(f"Creating table object: {table_name}")
                 table = Table(
                     name=table_name,
                     schema=table_info.get('schema', 'public'),
@@ -66,7 +73,9 @@ class DBParser:
                 table_objects.append(table)
                 
                 # Create column objects for this table
-                for column_info in table_info.get('columns', []):
+                columns_for_table = table_info.get('columns', [])
+                self.logger.debug(f"Creating {len(columns_for_table)} columns for table {table_name}")
+                for column_info in columns_for_table:
                     column = Column(
                         name=column_info['name'],
                         data_type=column_info['data_type'],
@@ -82,6 +91,8 @@ class DBParser:
                     # Add table_name to column for relationship
                     column.table_name = table_name
                     column_objects.append(column)
+            
+            self.logger.debug(f"Created {len(table_objects)} table objects and {len(column_objects)} column objects")
             
             # Create index objects
             index_objects = []
@@ -443,9 +454,25 @@ class DBParser:
             try:
                 self.logger.info(f"Parsing DDL file: {sql_file}")
                 db_objects = self.parse_ddl_file(file_path, project_name)
+                
+                # 파싱 결과 상세 로그
+                tables_count = len(db_objects['tables'])
+                columns_count = len(db_objects['columns'])
+                indexes_count = len(db_objects['indexes'])
+                constraints_count = len(db_objects['constraints'])
+                
+                self.logger.info(f"DDL file '{sql_file}' parsing result:")
+                self.logger.info(f"  - Database: {db_objects['database'].name}")
+                self.logger.info(f"  - Tables: {tables_count}")
+                self.logger.info(f"  - Columns: {columns_count}")
+                self.logger.info(f"  - Indexes: {indexes_count}")
+                self.logger.info(f"  - Constraints: {constraints_count}")
+                
                 all_objects.append(db_objects)
             except Exception as e:
                 self.logger.error(f"Error parsing {sql_file}: {str(e)}")
+                import traceback
+                self.logger.error(f"Traceback: {traceback.format_exc()}")
                 continue
         
         return all_objects

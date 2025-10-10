@@ -216,3 +216,13 @@ plantuml.jar
 # External libraries
 libs/
 
+csa/cli/__pycache__/
+csa/services/__pycache__/
+csa/utils/__pycache__/
+csa/models/__pycache__/
+*.pyc
+
+logs/
+*.log
+
+.env
